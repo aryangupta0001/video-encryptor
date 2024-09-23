@@ -67,10 +67,33 @@ body {
     font-size: 20px;
     border: none;
     padding: 5px 10px;
+    margin-top: 10px;
 }
 
 #dragDrop img {
     display: block;
     max-height: 50%;
     margin: auto;
+}
+
+.button {
+    display: block;
+    background-color: rgb(220, 220, 220);
+    padding: 4px 20px;
+    margin: auto;
+    margin-top: 20px;
+    width: fit-content;
+    color: black;
+    font-weight: bolder;
+    border-radius: 5px;
+}
+
+.button:hover {
+    cursor: pointer;
+}
+
+.button:active {
+    background-color: rgb(201, 201, 201);
+    color: rgb(143, 142, 142);
+    animation-duration: 0.05ms;
 }
