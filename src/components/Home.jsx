@@ -1,12 +1,14 @@
 import React from 'react'
-import "./Home.css"
-import uploadImg from "./assets/images/cloud-computing.png"
 import { useState } from 'react'
+import "./Home.css"
+
+import uploadImg from "../assets/images/cloud-computing.png"
 
 const Home = () => {
   const [btnName, setBtnName] = useState("Browse");
   const [file, setFile] = useState(null);
   const [dragging, setDragging] = useState(false);
+  const [fileData, setFileData] = useState(null);
 
 
   const handleNewFile = (e) => {
@@ -28,17 +30,27 @@ const Home = () => {
 
     console.log("File Dropped");
 
-    if(e.dataTransfer.files)
-        if(e.dataTransfer.files.length > 0)
-        { const newFile = e.dataTransfer.files[0];
+    if (e.dataTransfer.files)
+      if (e.dataTransfer.files.length > 0) {
+        const newFile = e.dataTransfer.files[0];
 
-          if(newFile.type.startsWith("video/"))
-            setFile(newFile);
+        if (newFile.type.startsWith("video/"))
+          setFile(newFile);
 
-          else
-            alert("Video File Not Found");
-        }
+        else
+          alert("Video File Not Found");
+      }
+  }
 
+  const handleFileUpload = (e) => {
+    let reader = new FileReader();
+    reader.onload = (e) => {
+      const binaryData = e.target.result;
+      setFileData(binaryData);
+    }
+
+    reader.readAsArrayBuffer(file);
+    console.log(fileData);
   }
 
   return (
@@ -51,7 +63,7 @@ const Home = () => {
 
       <div id="dragDrop" onDragOver={handleFileDragOver} onDragLeave={handleDragLeave} onDrop={handleFileDrop}>
         {/* <div> */}
-        <img src={uploadImg} alt="" />
+        <img src={uploadImg} alt="" onClick={() => { document.getElementById("browseFileBtn").click() }} className='cursor' />
         {/* </div> */}
         Drag & Drop to Upload File
         <br></br>
@@ -62,6 +74,18 @@ const Home = () => {
         <label htmlFor="browseFileBtn" className='button' >{file ? file.name : "Browse File"}</label>
 
         <div>
+          {file &&
+            (<>
+              <p>
+                Name : {file.name}
+              </p>
+              <p>
+                Size : {(file.size / 1048576).toFixed(2)} MB
+              </p>
+
+              <button className='button mb-10' onClick={handleFileUpload} >Upload</button>
+            </>
+            )}
         </div>
 
       </div>
