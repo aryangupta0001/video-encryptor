@@ -46,12 +46,30 @@ const Home = () => {
     let reader = new FileReader();
     reader.onload = (e) => {
       const binaryData = e.target.result;
-      setFileData(binaryData);
+      const b64Data = convertToBase64(binaryData);
+      setFileData(b64Data);
+      console.log(fileData);
     }
 
     reader.readAsArrayBuffer(file);
-    console.log(fileData);
+  }conve
+
+  const convertToBase64 = (binaryData) =>
+  {
+    let binary = '';
+
+    const bytes = new Uint8Array(binaryData);
+    const len = bytes.byteLength;
+
+    for(let i = 0; i<len; i++)
+    {
+      console.log(i);
+      binary += String.fromCharCode(bytes[i]);
+    }
+
+    return window.btoa(binary)
   }
+
 
   return (
     <div className='body'>
