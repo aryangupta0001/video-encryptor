@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convert Video to Hexadecimal</title>
+</head>
+<body>
+    <h2>Convert and Encrypt Video</h2>
+    <input type="file" id="fileInput" accept="video/*">
+    <button id="convertBtn" disabled>Convert to Hex</button>
+    <div id="progress"></div>
+
+    <script>
+        const CHUNK_SIZE = 10 * 1024 * 1024; // 10 MB per chunk to process
+        const fileInput = document.getElementById('fileInput');
+        const convertBtn = document.getElementById('convertBtn');
+        let videoFile = null;
+
+        // Event listener for file selection
+        fileInput.addEventListener('change', async (event) => {
+            videoFile = event.target.files[0];
+            if (videoFile && videoFile.type.startsWith('video/')) {
+                convertBtn.disabled = false;  // Enable convert button if valid video
+            } else {
+                alert('Please select a valid video file.');
+                convertBtn.disabled = true;
+            }
+        });
+
+        // Convert ArrayBuffer to hexadecimal string
+        function arrayBufferToHex(buffer) {
+            const byteArray = new Uint8Array(buffer);
+            return byteArray.reduce((hexString, byte) => {
+                return hexString + ('0' + byte.toString(16)).slice(-2);
+            }, '');
+        }
+
+        // Process video in chunks and convert each to hex
+        async function processFileInChunks(file) {
+            const fileSize = file.size;
+            let offset = 0;
+            let hexData = '';
+
+            while (offset < fileSize) {
+                const chunk = file.slice(offset, offset + CHUNK_SIZE);  // Read chunk
+                const arrayBuffer = await chunk.arrayBuffer();           // Read as ArrayBuffer
+                const hexChunk = arrayBufferToHex(arrayBuffer);          // Convert to Hex
+                hexData += hexChunk;                                     // Append to result
+                offset += CHUNK_SIZE;
+                document.getElementById('progress').textContent = `Processing: ${((offset / fileSize) * 100).toFixed(2)}%`;
+            }
+
+            return hexData;
+        }
+
+        // Event listener for Convert button
+        convertBtn.addEventListener('click', async () => {
+            const hexData = await processFileInChunks(videoFile);
+
+            console.log('Hexadecimal Data:', hexData);  // For demonstration, you can store this or proceed to encryption
+            alert('Video converted to hexadecimal!');
+        });
+    </script>
+</body>
+</html>

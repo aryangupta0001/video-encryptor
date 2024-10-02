@@ -9,6 +9,9 @@ const Home = () => {
   const [file, setFile] = useState(null);
   const [dragging, setDragging] = useState(false);
   const [fileData, setFileData] = useState(null);
+  const [hexdata, setHexData] = useState('');
+
+  const CHUNK_SIZE = 0.01*1024*1024;
 
 
   const handleNewFile = (e) => {
@@ -21,9 +24,17 @@ const Home = () => {
     setDragging(true);
   }
 
-  const handleDragLeave = () => {
+  const handleDragLeave = ()  => {
     setDragging(false);
   }
+
+  const arrayBufferToHex = (buffer) => {
+    const byteArray = new Uint8Array(buffer);
+    
+    return byteArray.reduce((hexString, byte) => {
+      return hexString + ('0' + byte.toString(16)).slice(-2);
+    }, '');
+  };
 
   const handleFileDrop = (e) => {
     e.preventDefault();
@@ -42,33 +53,66 @@ const Home = () => {
       }
   }
 
-  const handleFileUpload = (e) => {
-    let reader = new FileReader();
-    reader.onload = (e) => {
-      const binaryData = e.target.result;
-      const b64Data = convertToBase64(binaryData);
-      setFileData(b64Data);
-      console.log(fileData);
-    }
+  // const handleFileUpload = (e) => {
+  //   let reader = new FileReader();
+  //   reader.onload = (e) => {
+  //     const binaryData = e.target.result;
 
-    reader.readAsArrayBuffer(file);
-  }conve
 
-  const convertToBase64 = (binaryData) =>
-  {
-    let binary = '';
+  //     // const hexRep = convertToHex(binaryData);
 
-    const bytes = new Uint8Array(binaryData);
-    const len = bytes.byteLength;
+  //     console.log(binaryData);
+  //   }
 
-    for(let i = 0; i<len; i++)
+  //   reader.readAsArrayBuffer(file);
+  // }
+
+  const handleFileUpload = async () => {
+    let offset = 0;
+    const fileSize = file.size;
+    let hexResult = '';
+
+    while(offset < fileSize)
     {
-      console.log(i);
-      binary += String.fromCharCode(bytes[i]);
+      const chunk = file.slice(offset, offset + CHUNK_SIZE);
+
+      const arrayBuffer = await chunk.arrayBuffer();
+      const hexChunk = arrayBufferToHex(arrayBuffer);
+      hexResult += hexChunk;
+      console.log(hexChunk, "Hello\n");
+      offset += CHUNK_SIZE;
+
+      // setProgress(
     }
 
-    return window.btoa(binary)
+    setHexData(hexResult);
+
   }
+
+  // const convertToBase64 = (binaryData) =>
+  // {
+  //   let binary = '';
+
+  //   const bytes = new Uint8Array(binaryData);
+  //   const len = bytes.byteLength;
+
+  //   for(let i = 0; i<len; i++)
+  //   {
+  //     console.log(i);
+  //     binary += String.fromCharCode(bytes[i]);
+  //   }
+
+  //   return window.btoa(binary);
+  // }
+
+  // const convertToHex = (binaryData) => {
+  //   const byteArray = new Uint8Array(binaryData);
+  //   const hexArray = Array.from(byteArray, (byte) => {
+  //     byte.toString(16).padStart(2, '0')
+  //   }).join('');
+    
+    // return hexArray;
+  // }
 
 
   return (
