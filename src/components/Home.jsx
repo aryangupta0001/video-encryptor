@@ -5,13 +5,14 @@ import "./Home.css"
 import uploadImg from "../assets/images/cloud-computing.png"
 
 const Home = () => {
-  const [btnName, setBtnName] = useState("Browse");
   const [file, setFile] = useState(null);
   const [dragging, setDragging] = useState(false);
-  const [fileData, setFileData] = useState(null);
   const [hexdata, setHexData] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [uploadPercent, setUploadPercent] = useState(0.0);
 
-  const CHUNK_SIZE = 0.01*1024*1024;
+
+  const CHUNK_SIZE = 0.01 * 1024 * 1024;
 
 
   const handleNewFile = (e) => {
@@ -24,13 +25,13 @@ const Home = () => {
     setDragging(true);
   }
 
-  const handleDragLeave = ()  => {
+  const handleDragLeave = () => {
     setDragging(false);
   }
 
   const arrayBufferToHex = (buffer) => {
     const byteArray = new Uint8Array(buffer);
-    
+
     return byteArray.reduce((hexString, byte) => {
       return hexString + ('0' + byte.toString(16)).slice(-2);
     }, '');
@@ -53,67 +54,39 @@ const Home = () => {
       }
   }
 
-  // const handleFileUpload = (e) => {
-  //   let reader = new FileReader();
-  //   reader.onload = (e) => {
-  //     const binaryData = e.target.result;
-
-
-  //     // const hexRep = convertToHex(binaryData);
-
-  //     console.log(binaryData);
-  //   }
-
-  //   reader.readAsArrayBuffer(file);
-  // }
 
   const handleFileUpload = async () => {
+    setUploading(true);
     let offset = 0;
     const fileSize = file.size;
     let hexResult = '';
+    let processsedSize = 0;
 
-    while(offset < fileSize)
-    {
-      const chunk = file.slice(offset, offset + CHUNK_SIZE);
+    while (offset < fileSize) {
+      const chunk = file.slice(offset, (offset + CHUNK_SIZE > fileSize) ? fileSize : offset + CHUNK_SIZE);
 
       const arrayBuffer = await chunk.arrayBuffer();
       const hexChunk = arrayBufferToHex(arrayBuffer);
-      hexResult += hexChunk;
-      console.log(hexChunk, "Hello\n");
+
+      console.log("Chunk Length  : ", hexChunk.length);
+      console.log("Result Length  : ", hexResult.length);
+      hexResult += hexChunk
+
+      console.log(hexChunk);
+
       offset += CHUNK_SIZE;
 
-      // setProgress(
+      if (offset > fileSize)
+        offset = fileSize;
+
+      setUploadPercent(offset * 100 / fileSize);
     }
 
+
+    // setUploading(false);
     setHexData(hexResult);
 
   }
-
-  // const convertToBase64 = (binaryData) =>
-  // {
-  //   let binary = '';
-
-  //   const bytes = new Uint8Array(binaryData);
-  //   const len = bytes.byteLength;
-
-  //   for(let i = 0; i<len; i++)
-  //   {
-  //     console.log(i);
-  //     binary += String.fromCharCode(bytes[i]);
-  //   }
-
-  //   return window.btoa(binary);
-  // }
-
-  // const convertToHex = (binaryData) => {
-  //   const byteArray = new Uint8Array(binaryData);
-  //   const hexArray = Array.from(byteArray, (byte) => {
-  //     byte.toString(16).padStart(2, '0')
-  //   }).join('');
-    
-    // return hexArray;
-  // }
-
 
   return (
     <div className='body'>
@@ -145,15 +118,22 @@ const Home = () => {
                 Size : {(file.size / 1048576).toFixed(2)} MB
               </p>
 
-              <button className='button mb-10' onClick={handleFileUpload} >Upload</button>
-            </>
-            )}
-        </div>
+              <button className='button mb-10' onClick={handleFileUpload} style={{ display: uploading ? "none" : "block" }} >Upload</button>
 
+              <div style={{ display: uploading ? "block" : "none" }} className='m-auto w-70'>
+                <div id="progressBar" style={{ width: `${uploadPercent}%` }}>
+                  <div style={{ display: (uploadPercent < 100) ? "block" : "none" }}> Uploading... {uploadPercent.toFixed(2)}% </div>
+                  <div>Upload Complete</div>
+                </div>
+
+              </div>
+            </>
+            )
+          }
+
+        </div >
       </div>
 
-    </div >
-  )
+      )
 }
-
 export default Home
