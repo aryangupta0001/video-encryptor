@@ -59,8 +59,29 @@ const Home = () => {
     setUploading(true);
     let offset = 0;
     const fileSize = file.size;
+    const fileName = file.name;
+
     let hexResult = '';
     let processsedSize = 0;
+
+
+
+    try{
+      await fetch("http://localhost:3000/api/chunks/createvideohex", {
+        method: "POST",
+        headers:{
+          "Content-Type":"application/json",
+        },
+
+        body: JSON.stringify({fileName, fileSize})
+      });
+    }
+
+    catch(error)
+    {
+      alert("Some error Occured in uploading video\nCheck console");
+      console.log(error);
+    }
 
     while (offset < fileSize) {
       const chunk = file.slice(offset, (offset + CHUNK_SIZE > fileSize) ? fileSize : offset + CHUNK_SIZE);
@@ -134,6 +155,7 @@ const Home = () => {
         </div >
       </div>
 
-      )
+    </div>
+  )
 }
 export default Home

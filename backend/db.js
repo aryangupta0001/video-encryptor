@@ -1,32 +1,17 @@
-import mongoose from "mongoose";
-import express from "express";
-import videoHex from "./models/hexaCode.js";
+const mongoose = require('mongoose');
+const mongoose_url = "mongodb://127.0.0.1/videoConverter"
 
+const connectToMongo = async () => {
+    try {
+        await mongoose.connect(mongoose_url)
+        const dbConnect = mongoose.connection;          // Connection object
+        console.log(dbConnect);
 
-
-const conn = async () => {
-    await mongoose.connect("mongodb://localhost:27017/videoConverter")
-}
-const app = express()
-const PORT = 3000;
-
-app.get('/', (req, res) => {
-    const videoHex = new videoHex({ title: "sample.mp4", size: "15mb", chunks: [] });
-
-    videoHex.save();
-
-    res.send("Saved");
-})
-
-
-
-const startServer = async () => {
-    await conn();
-
-    app.listen(PORT, () => {
-        console.log(`Listening on port ${PORT}`)
-    })
+        console.log("Connected To Mongo Successfully");
+    }
+    catch(error){
+        console.error("Error Connecting to Database : ", error.message);
+    }
 }
 
-
-startServer();
+module.exports = connectToMongo;

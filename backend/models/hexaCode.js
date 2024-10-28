@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const videoChunkSchema = new mongoose.Schema({
     chunk: {
@@ -15,7 +15,8 @@ const videoHexSchema = new mongoose.Schema({
 
     size: {
         type: String,
-        default: null
+        default: null,
+        required: true
     },
 
     chunks: {
@@ -25,6 +26,4 @@ const videoHexSchema = new mongoose.Schema({
 })
 
 
-const videoHex = mongoose.model("videoHex", videoHexSchema);
-
-export default videoHex;
+module.exports = mongoose.model("videoHex", videoHexSchema);
