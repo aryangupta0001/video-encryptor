@@ -49,6 +49,7 @@ body {
     width: 40%;
     height: 40%;
     min-height: fit-content;
+    /* max-height: fit-content; */
 
     margin: auto;
     border: 2px solid snow;
@@ -76,14 +77,38 @@ body {
     margin: auto;
 }
 
-#progressBar {
+
+#progressBarDiv {
+    box-sizing: border-box;
     display: block;
     border: 1px solid white;
-    background-color: rgb(0 255 191);
     border-radius: 5px;
+    max-height: fit-content;
+    min-height: fit-content;
+    width: 100%;
+
+}
+
+#progressBarDiv span{
+    z-index: 1;
+    display: block;
+    position: absolute;
+}
+
+#progressBar {
+    /* box-sizing: border-box; */
+    display: block;
+    border-radius: 4px;
+    background-color: rgb(0 255 191);
     width: 100%;
     height: 15px;
+    
+    /* margin-bottom: 5%; */
 
+}
+
+#progressBar div {
+    margin-bottom: 5%;
 }
 
 .button {
@@ -122,5 +147,4 @@ body {
 
 .w-70 {
     width: 70%;
-    width: ;
 }

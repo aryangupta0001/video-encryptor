@@ -3,6 +3,7 @@ import { useState } from 'react'
 import "./Home.css"
 
 import uploadImg from "../assets/images/cloud-computing.png"
+import { response } from 'express'
 
 const Home = () => {
   const [file, setFile] = useState(null);
@@ -10,6 +11,7 @@ const Home = () => {
   const [hexdata, setHexData] = useState('');
   const [uploading, setUploading] = useState(false);
   const [uploadPercent, setUploadPercent] = useState(0.0);
+  const [videoId, setVideoId] = useState(0);
 
 
   const CHUNK_SIZE = 0.01 * 1024 * 1024;
@@ -66,19 +68,22 @@ const Home = () => {
 
 
 
-    try{
-      await fetch("http://localhost:3000/api/chunks/createvideohex", {
+    try {
+      const response = await fetch("http://localhost:3000/api/chunks/createvideohex", {
         method: "POST",
-        headers:{
-          "Content-Type":"application/json",
+
+        headers: {
+          "Content-Type": "application/json",
         },
 
-        body: JSON.stringify({fileName, fileSize})
+        body: JSON.stringify({ fileName, fileSize })
       });
+
+      const data = await response.json();
+      setVideoId(data.id);
     }
 
-    catch(error)
-    {
+    catch (error) {
       alert("Some error Occured in uploading video\nCheck console");
       console.log(error);
     }
@@ -88,6 +93,16 @@ const Home = () => {
 
       const arrayBuffer = await chunk.arrayBuffer();
       const hexChunk = arrayBufferToHex(arrayBuffer);
+
+      const appendresponse = await fetch(`http://localhost:3000/api/chunks/addvideochunks/${videoId}`, {
+        method: "PUT",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({ chunkData: hexChunk })
+      });
 
       console.log("Chunk Length  : ", hexChunk.length);
       console.log("Result Length  : ", hexResult.length);
@@ -118,9 +133,9 @@ const Home = () => {
       </center>
 
       <div id="dragDrop" onDragOver={handleFileDragOver} onDragLeave={handleDragLeave} onDrop={handleFileDrop}>
-        {/* <div> */}
+
         <img src={uploadImg} alt="" onClick={() => { document.getElementById("browseFileBtn").click() }} className='cursor' />
-        {/* </div> */}
+
         Drag & Drop to Upload File
         <br></br>
         <br></br>
@@ -142,10 +157,14 @@ const Home = () => {
               <button className='button mb-10' onClick={handleFileUpload} style={{ display: uploading ? "none" : "block" }} >Upload</button>
 
               <div style={{ display: uploading ? "block" : "none" }} className='m-auto w-70'>
-                <div id="progressBar" style={{ width: `${uploadPercent}%` }}>
-                  <div style={{ display: (uploadPercent < 100) ? "block" : "none" }}> Uploading... {uploadPercent.toFixed(2)}% </div>
-                  <div>Upload Complete</div>
+                <div id="progressBarDiv">
+                  <div id="progressBar" style={{ width: `${uploadPercent}%` }}>
+                  </div>
                 </div>
+
+                <div style={{ display: (uploadPercent < 100) ? "block" : "none" }}> Uploading... {uploadPercent.toFixed(2)}% </div>
+
+                <div style={{ display: (uploadPercent < 100) ? "none" : "block" }}>Upload Complete</div>
 
               </div>
             </>
