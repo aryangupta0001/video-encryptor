@@ -1,7 +1,6 @@
 const connectToMongo = require("./db");
 const express = require('express');
 const cors = require("cors");
-global.Buffer = global.Buffer || require('buffer').Buffer;
 
 
 
@@ -14,7 +13,7 @@ app.use(cors());
 app.use(express.json());        // Use this middleware to parse incoming requests with JSON Payload.
 
 // Available Routes :-
-app.use("/api/chunks/", require("./routes/chunks")
+// app.use("/api/chunks/", require("./routes/chunks")
 
 app.listen(PORT, () => {
   console.log(`App listening on PORT ${PORT}`);
