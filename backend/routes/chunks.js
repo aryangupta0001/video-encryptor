@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const hexaCode = require("../models/hexaCode");
+const hexaCode = require("../models/videoMetaData");
 const { body, validationResult } = require("express-validator");
 
 
@@ -9,7 +9,7 @@ router.post("/createvideohex", async (req, res) => {
 
     if (result.isEmpty()) {
         try {
-            console.log(body);
+            console.log("Hello");
             const { fileName, fileSize } = req.body;
 
             const videohex = await hexaCode.create({
@@ -29,7 +29,7 @@ router.post("/createvideohex", async (req, res) => {
 })
 
 
-router.put("/addvideochunks:/id", async (req, res) => {
+router.put("/addvideochunks/:id", async (req, res) => {
     const { id } = req.params;
     const { chunkData } = req.body;
 
@@ -46,7 +46,7 @@ router.put("/addvideochunks:/id", async (req, res) => {
 
     catch(error)
     {
-        console.log("Error generated at line no. 49 in chunks.js");
+        console.log(error);
     }
 })
 

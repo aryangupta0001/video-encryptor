@@ -63,8 +63,7 @@ const Home = () => {
 
     let hexResult = '';
     let processsedSize = 0;
-
-
+    let videoId = 0;
 
     try {
       const response = await fetch("http://localhost:3000/api/chunks/createvideohex", {
@@ -78,7 +77,9 @@ const Home = () => {
       });
 
       const data = await response.json();
-      setVideoId(data.id);
+
+      await setVideoId(data.id);
+
     }
 
     catch (error) {
@@ -86,27 +87,32 @@ const Home = () => {
       console.log(error);
     }
 
+
     while (offset < fileSize) {
       const chunk = file.slice(offset, (offset + CHUNK_SIZE > fileSize) ? fileSize : offset + CHUNK_SIZE);
 
       const arrayBuffer = await chunk.arrayBuffer();
       const hexChunk = arrayBufferToHex(arrayBuffer);
 
-      const appendresponse = await fetch(`http://localhost:3000/api/chunks/addvideochunks/${videoId}`, {
-        method: "PUT",
+      try {
+        const appendresponse = await fetch(`http://localhost:3000/api/chunks/addvideochunks/${videoId}`, {
+          method: "PUT",
 
-        headers: {
-          "Content-Type": "application/json",
-        },
+          headers: {
+            "Content-Type": "application/json",
+          },
 
-        body: JSON.stringify({ chunkData: hexChunk })
-      });
+          body: JSON.stringify({ chunkData: hexChunk })
+        });
 
-      console.log("Chunk Length  : ", hexChunk.length);
-      console.log("Result Length  : ", hexResult.length);
-      hexResult += hexChunk
+        console.log(appendresponse);
 
-      console.log(hexChunk);
+      }
+
+      catch (error) {
+        alert("Some error Occured in uploading video\nCheck console");
+        console.log(error);
+      }
 
       offset += CHUNK_SIZE;
 
