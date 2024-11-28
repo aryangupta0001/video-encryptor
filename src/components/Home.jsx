@@ -62,28 +62,38 @@ const Home = () => {
     const fileName = file.name;
 
     let hexResult = '';
-    let processsedSize = 0;
-    let videoId = 0;
+    let totalChunks = Math.ceil(fileSize / CHUNK_SIZE);
+    let videoId = '';
+
+
+
+    console.log(totalChunks + "CHUNKS");
 
     try {
-      const response = await fetch("http://localhost:3000/api/chunks/createvideohex", {
+      const response = await fetch("http://localhost:3000/api/chunks/uploadvideo", {
         method: "POST",
 
         headers: {
           "Content-Type": "application/json",
         },
 
-        body: JSON.stringify({ fileName, fileSize })
+        body: JSON.stringify({ fileName, fileSize, totalChunks })
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload video');
+      }
+
 
       const data = await response.json();
 
-      await setVideoId(data.id);
+      // await setVideoId(data.id);
+      videoId = data.id;
 
     }
 
     catch (error) {
-      alert("Some error Occured in uploading video\nCheck console");
+      alert("Some error Occured in uploading video details\nCheck console");
       console.log(error);
     }
 
@@ -95,22 +105,22 @@ const Home = () => {
       const hexChunk = arrayBufferToHex(arrayBuffer);
 
       try {
-        const appendresponse = await fetch(`http://localhost:3000/api/chunks/addvideochunks/${videoId}`, {
-          method: "PUT",
+        const addedVideoChunk = await fetch(`http://localhost:3000/api/chunks/addvideochunks/`, {
+          method: "POST",
 
           headers: {
             "Content-Type": "application/json",
           },
 
-          body: JSON.stringify({ chunkData: hexChunk })
+          body: JSON.stringify({ videoId: videoId, chunkData: hexChunk })
         });
 
-        console.log(appendresponse);
+        console.log(addedVideoChunk);
 
       }
 
       catch (error) {
-        alert("Some error Occured in uploading video\nCheck console");
+        alert("Some error Occured in uploading video chunks\nCheck console");
         console.log(error);
       }
 

@@ -28,7 +28,7 @@ const videoMetaDataSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-
+    
     videoChunkIds: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'VideoChunk'
