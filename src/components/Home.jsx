@@ -9,10 +9,11 @@ const Home = () => {
   const [hexdata, setHexData] = useState('');
   const [uploading, setUploading] = useState(false);
   const [uploadPercent, setUploadPercent] = useState(0.0);
-  const [videoId, setVideoId] = useState(0);
+  const [lockKey, setLockKey] = useState('');
 
 
-  const CHUNK_SIZE = 0.01 * 1024 * 1024;
+  const CHUNK_SIZE = 0.025 * 1024 * 1024;
+  const INSERTION_OFFSET = 1000;
 
 
   const handleNewFile = (e) => {
@@ -54,6 +55,31 @@ const Home = () => {
       }
   }
 
+  const convertKeyToHex = async (key) => {
+    return Array.from(key) // Convert string to array of characters
+      .map(char => char.charCodeAt(0).toString(16).padStart(2, '0')) // Convert each char to hex
+      .join(''); // Join the hex values into a single String
+  }
+
+  const insertLockKey = async (hexChunk, lockKey) => {
+    let a = [];
+    let i = 0;
+    let pos = 0;
+
+    while (true) {
+      if (pos + INSERTION_OFFSET <= hexChunk.length) {
+        a.push(lockKey.concat(hexChunk.slice(pos, pos + INSERTION_OFFSET)));
+        pos = pos + INSERTION_OFFSET;
+      }
+
+      else {
+        a.push(lockKey.concat(hexChunk.slice(pos, hexChunk.length)));
+        break;
+      }
+    }
+
+    return a.join('');
+  }
 
   const handleFileUpload = async () => {
     setUploading(true);
@@ -66,6 +92,14 @@ const Home = () => {
     let videoId = '';
 
 
+
+    const lockIdHex = await convertKeyToHex(lockKey);
+    setLockKey(lockIdHex);
+
+    console.log("HeX : " + lockIdHex);
+
+    const startTime = new Date();
+    console.log(`Upload started at ${startTime.toLocaleTimeString()}`)
 
     console.log(totalChunks + "CHUNKS");
 
@@ -86,8 +120,6 @@ const Home = () => {
 
 
       const data = await response.json();
-
-      // await setVideoId(data.id);
       videoId = data.id;
 
     }
@@ -104,6 +136,8 @@ const Home = () => {
       const arrayBuffer = await chunk.arrayBuffer();
       const hexChunk = arrayBufferToHex(arrayBuffer);
 
+      const saltedHexChunk = await insertLockKey(hexChunk, lockIdHex);
+
       try {
         const addedVideoChunk = await fetch(`http://localhost:3000/api/chunks/addvideochunks/`, {
           method: "POST",
@@ -112,10 +146,13 @@ const Home = () => {
             "Content-Type": "application/json",
           },
 
-          body: JSON.stringify({ videoId: videoId, chunkData: hexChunk })
+          body: JSON.stringify({ videoId: videoId, chunkData: saltedHexChunk })
         });
 
-        console.log(addedVideoChunk);
+        const chunkData = await addedVideoChunk.json();
+
+
+        console.log("Video Chunk : \t", chunkData.id);
 
       }
 
@@ -132,10 +169,20 @@ const Home = () => {
       setUploadPercent(offset * 100 / fileSize);
     }
 
+    const endTime = new Date();
+    console.log(`Upload started at ${endTime.toLocaleTimeString()}`)
+
+    console.log(`Time Taken : ${(endTime - startTime) / 1000}`);
 
     // setUploading(false);
     setHexData(hexResult);
+  }
 
+
+  const handleLockingKey = async () => {
+    let key = document.getElementById('lockKeyInput').value;
+
+    setLockKey(key);
   }
 
   return (
@@ -156,7 +203,7 @@ const Home = () => {
         OR
         <input type="file" accept="video/*" id='browseFileBtn' style={{ display: 'none' }} onChange={handleNewFile} />
 
-        <label htmlFor="browseFileBtn" className='button' >{file ? file.name : "Browse File"}</label>
+        <label htmlFor="browseFileBtn" className='button cursor' >{file ? file.name : "Browse File"}</label>
 
         <div>
           {file &&
@@ -168,7 +215,9 @@ const Home = () => {
                 Size : {(file.size / 1048576).toFixed(2)} MB
               </p>
 
-              <button className='button mb-10' onClick={handleFileUpload} style={{ display: uploading ? "none" : "block" }} >Upload</button>
+              <input type="text" id='lockKeyInput' className='mb-10' placeholder='Enter Alpha-Numeric Locking Key (Max. 20 characters)' onChange={handleLockingKey} />
+
+              <button className='button mb-10 cursor' onClick={handleFileUpload} style={{ display: lockKey.length > 0 ? "block" : "none" }} >Upload</button>
 
               <div style={{ display: uploading ? "block" : "none" }} className='m-auto w-70'>
                 <div id="progressBarDiv">
@@ -187,6 +236,7 @@ const Home = () => {
 
         </div >
       </div>
+
 
     </div>
   )

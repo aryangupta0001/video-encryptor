@@ -48,7 +48,7 @@ router.post("/addvideochunks/", async (req, res) => {
             })
         }
 
-        catch (error) {
+        catch (error) { 
             res.status(500).json({ message: "Some Error Occured while addding video chunks", error: error.message });
         }
     }
