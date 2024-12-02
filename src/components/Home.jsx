@@ -1,15 +1,17 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { useState } from 'react'
 import "./Home.css"
+import chunkContext from '../context/chunkContext'
 import uploadImg from "../assets/images/cloud-computing.png"
 
-const Home = () => {
+const Home = (props) => {
+
+  const context = useContext(chunkContext);
+  const { arrayBufferToHex, insertLockKey, uploadVideo, addVideoChunks, getTotalUploadedChunks, handleLockingKey, convertKeyToHex, encryptVideo, lockKey, sendToBackend } = context;
+
   const [file, setFile] = useState(null);
-  const [dragging, setDragging] = useState(false);
-  const [hexdata, setHexData] = useState('');
   const [uploading, setUploading] = useState(false);
   const [uploadPercent, setUploadPercent] = useState(0.0);
-  const [lockKey, setLockKey] = useState('');
 
 
   const CHUNK_SIZE = 0.025 * 1024 * 1024;
@@ -30,14 +32,6 @@ const Home = () => {
     setDragging(false);
   }
 
-  const arrayBufferToHex = (buffer) => {
-    const byteArray = new Uint8Array(buffer);
-
-    return byteArray.reduce((hexString, byte) => {
-      return hexString + ('0' + byte.toString(16)).slice(-2);
-    }, '');
-  };
-
   const handleFileDrop = (e) => {
     e.preventDefault();
 
@@ -55,46 +49,18 @@ const Home = () => {
       }
   }
 
-  const convertKeyToHex = async (key) => {
-    return Array.from(key) // Convert string to array of characters
-      .map(char => char.charCodeAt(0).toString(16).padStart(2, '0')) // Convert each char to hex
-      .join(''); // Join the hex values into a single String
-  }
-
-  const insertLockKey = async (hexChunk, lockKey) => {
-    let a = [];
-    let i = 0;
-    let pos = 0;
-
-    while (true) {
-      if (pos + INSERTION_OFFSET <= hexChunk.length) {
-        a.push(lockKey.concat(hexChunk.slice(pos, pos + INSERTION_OFFSET)));
-        pos = pos + INSERTION_OFFSET;
-      }
-
-      else {
-        a.push(lockKey.concat(hexChunk.slice(pos, hexChunk.length)));
-        break;
-      }
-    }
-
-    return a.join('');
-  }
-
   const handleFileUpload = async () => {
     setUploading(true);
+
     let offset = 0;
     const fileSize = file.size;
     const fileName = file.name;
-
-    let hexResult = '';
     let totalChunks = Math.ceil(fileSize / CHUNK_SIZE);
-    let videoId = '';
 
 
 
-    const lockIdHex = await convertKeyToHex(lockKey);
-    setLockKey(lockIdHex);
+    // Convert Lock Key into Hexadecimal Format :-
+    const lockIdHex = await convertKeyToHex();
 
     console.log("HeX : " + lockIdHex);
 
@@ -103,31 +69,9 @@ const Home = () => {
 
     console.log(totalChunks + "CHUNKS");
 
-    try {
-      const response = await fetch("http://localhost:3000/api/chunks/uploadvideo", {
-        method: "POST",
 
-        headers: {
-          "Content-Type": "application/json",
-        },
-
-        body: JSON.stringify({ fileName, fileSize, totalChunks })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to upload video');
-      }
-
-
-      const data = await response.json();
-      videoId = data.id;
-
-    }
-
-    catch (error) {
-      alert("Some error Occured in uploading video details\nCheck console");
-      console.log(error);
-    }
+    // Upload Video Details :-
+    const videoId = await uploadVideo(fileName, fileSize, totalChunks);
 
 
     while (offset < fileSize) {
@@ -136,30 +80,13 @@ const Home = () => {
       const arrayBuffer = await chunk.arrayBuffer();
       const hexChunk = arrayBufferToHex(arrayBuffer);
 
-      const saltedHexChunk = await insertLockKey(hexChunk, lockIdHex);
-
-      try {
-        const addedVideoChunk = await fetch(`http://localhost:3000/api/chunks/addvideochunks/`, {
-          method: "POST",
-
-          headers: {
-            "Content-Type": "application/json",
-          },
-
-          body: JSON.stringify({ videoId: videoId, chunkData: saltedHexChunk })
-        });
-
-        const chunkData = await addedVideoChunk.json();
 
 
-        console.log("Video Chunk : \t", chunkData.id);
+      const saltedHexChunk = await insertLockKey(hexChunk, lockIdHex, INSERTION_OFFSET);
 
-      }
 
-      catch (error) {
-        alert("Some error Occured in uploading video chunks\nCheck console");
-        console.log(error);
-      }
+      // Upload Video Chunks :-
+      await addVideoChunks(videoId, saltedHexChunk);
 
       offset += CHUNK_SIZE;
 
@@ -169,20 +96,43 @@ const Home = () => {
       setUploadPercent(offset * 100 / fileSize);
     }
 
+
+
+    const totalUploadedChunks = getTotalUploadedChunks(videoId);
+
+
+
+    // Counting total no. of chunks uploaded :-
+    // try {
+    //   const toalUploadedChunks = await fetch(`http://localhost:3000/api/chunks/totaluploadedchunks?videoId=${videoId}`, {
+    //     method: "GET",
+
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //     },
+    //   });
+
+    //   const uploadedChunkCount = await toalUploadedChunks.json();
+    //   // console.log(uploadedChunkCount);
+
+    console.log(totalChunks == totalUploadedChunks ? "All chunks uploaded ssuccessfully" : `${totalChunks - totalUploadedChunks} chunks are missing`);
+    // }
+
+    // catch (error) {
+    //   alert("Some error Occured in counting the total no. of uploaded chunks\nCheck console");
+    //   console.log(error);
+    // }
+
     const endTime = new Date();
     console.log(`Upload started at ${endTime.toLocaleTimeString()}`)
 
     console.log(`Time Taken : ${(endTime - startTime) / 1000}`);
 
     // setUploading(false);
-    setHexData(hexResult);
-  }
 
+    const encrypted = encryptVideo(videoId);
 
-  const handleLockingKey = async () => {
-    let key = document.getElementById('lockKeyInput').value;
-
-    setLockKey(key);
+    console.log(encrypted);
   }
 
   return (
@@ -215,9 +165,12 @@ const Home = () => {
                 Size : {(file.size / 1048576).toFixed(2)} MB
               </p>
 
-              <input type="text" id='lockKeyInput' className='mb-10' placeholder='Enter Alpha-Numeric Locking Key (Max. 20 characters)' onChange={handleLockingKey} />
-
-              <button className='button mb-10 cursor' onClick={handleFileUpload} style={{ display: lockKey.length > 0 ? "block" : "none" }} >Upload</button>
+              <input type="text" id='lockKeyInput' className='mb-10' placeholder='Enter Alpha-Numeric Locking Key (Max. 20 characters)' onChange={handleLockingKey} disabled={uploading ? true : false} />
+              {!uploading &&
+                <>
+                  <button className='button mb-10 cursor' onClick={handleFileUpload} style={{ display: lockKey.length > 0 ? "block" : "none" }} >Upload</button>
+                </>
+              }
 
               <div style={{ display: uploading ? "block" : "none" }} className='m-auto w-70'>
                 <div id="progressBarDiv">

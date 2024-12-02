@@ -107,34 +107,18 @@ body {
     margin-bottom: 5%;
 }
 
-
-#lockKeyInput {
-    box-sizing: border-box;
-    display: block;
-    width: 60%;
-    /* min-height: fit-content; */
-    /* max-height: fit-content; */
-
-    margin-top: 10px;
-    /* border: 2px solid rgb(255, 0, 0); */
-
-} 
-
 #lockKeyInput {
     box-sizing: border-box;
     display: inline-block;
-
+    
     min-height: 30px;
     width: 70%;
-    
-    /* margin: auto; */
+
+    margin-top: 10px;
     padding: 0px 15px 0px 15px;
 
     border: 0;
     border-radius: 15px;
-    
-    /* border-top-left-radius: 15px;
-    border-bottom-left-radius: 15px; */
     
     font-family: "Open Sans", sans-serif;
     font-optical-sizing: auto;
