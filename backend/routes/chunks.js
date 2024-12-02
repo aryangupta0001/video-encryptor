@@ -3,6 +3,15 @@ const router = express.Router();
 const { videoMetaData, videoChunk } = require("../models/videoMetaData");
 const { body, validationResult } = require("express-validator");
 
+const crypto = require('crypto');
+
+// Function to generate a random 256-bit (32-byte) secret key
+const secretKey = crypto.randomBytes(32); // 32 bytes = 256 bits
+
+// Function to generate a random 128-bit (16-byte) IV
+const iv = crypto.randomBytes(16); // 16 bytes = 128 bits
+
+
 
 router.post("/uploadvideo", async (req, res) => {
     const result = validationResult(req);
@@ -39,6 +48,15 @@ router.post("/addvideochunks/", async (req, res) => {
 
             const { videoId, chunkData } = req.body;
 
+
+            const chunkBuffer = Buffer.from(chunkData, 'hex');
+
+            const cipher = crypto.createCipheriv('aes-256-cbc', secretKey, iv);
+
+            let encryptedChunk = cipher.update(chunkBuffer);
+            encryptedChunk = Buffer.concat([encryptedChunk, cipher.final()]);
+            encryptedChunk = encryptedChunk.toString('hex');
+
             const VideoChunk = await videoChunk.create({
                 videoId: videoId, chunkData: chunkData
             });
@@ -54,7 +72,7 @@ router.post("/addvideochunks/", async (req, res) => {
         }
 
         catch (error) {
-            alert("Alert inside add video chunks chunks.ks", error.message);
+            console.log("Alert inside add video chunks", error)
             res.status(500).json({ message: "Some Error Occured while adDing video chunks", error: error.message });
         }
     }

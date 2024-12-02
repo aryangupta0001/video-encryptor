@@ -99,40 +99,14 @@ const Home = (props) => {
 
 
     const totalUploadedChunks = getTotalUploadedChunks(videoId);
-
-
-
-    // Counting total no. of chunks uploaded :-
-    // try {
-    //   const toalUploadedChunks = await fetch(`http://localhost:3000/api/chunks/totaluploadedchunks?videoId=${videoId}`, {
-    //     method: "GET",
-
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //     },
-    //   });
-
-    //   const uploadedChunkCount = await toalUploadedChunks.json();
-    //   // console.log(uploadedChunkCount);
-
     console.log(totalChunks == totalUploadedChunks ? "All chunks uploaded ssuccessfully" : `${totalChunks - totalUploadedChunks} chunks are missing`);
-    // }
-
-    // catch (error) {
-    //   alert("Some error Occured in counting the total no. of uploaded chunks\nCheck console");
-    //   console.log(error);
-    // }
 
     const endTime = new Date();
     console.log(`Upload started at ${endTime.toLocaleTimeString()}`)
-
     console.log(`Time Taken : ${(endTime - startTime) / 1000}`);
 
     // setUploading(false);
 
-    const encrypted = encryptVideo(videoId);
-
-    console.log(encrypted);
   }
 
   return (

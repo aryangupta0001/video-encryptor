@@ -138,75 +138,12 @@ const ChunkState = (props) => {
             console.log(error);
         }
     }
-
-
-    // Encryption Code :-
-
-    const encryptVideo = async (videoId) => {
-        try {
-            const toalUploadedChunks = await fetch(`http://localhost:3000/api/chunks/totaluploadedchunks?videoId=${videoId}`, {
-                method: "GET",
-
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            });
-
-            const uploadedChunkCount = await toalUploadedChunks.json();
-        }
-        catch (error) {
-            console.log(error);
-        }
-
-    }
-
-
-
-
-    const sendToBackend = async (arrayBuffer) => {
-        try {
-            const sent = await fetch(`http://localhost:3000/api/chunks/sendtobackend`, {
-                method: "POST",
-
-                headers: {
-                    "Content-Type": "application/octet-stream"
-                },
-
-                body: arrayBuffer
-            });
-        }
-
-        catch (error) {
-            console.log("Error occured in sending arraybuffer to backend", error.message);
-        }
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    
 
 
 
     return (
-        <chunkContext.Provider value={{ arrayBufferToHex, insertLockKey, uploadVideo, addVideoChunks, getTotalUploadedChunks, handleLockingKey, convertKeyToHex, encryptVideo, lockKey, sendToBackend }}>
+        <chunkContext.Provider value={{ arrayBufferToHex, insertLockKey, uploadVideo, addVideoChunks, getTotalUploadedChunks, handleLockingKey, convertKeyToHex, lockKey }}>
             {props.children}
         </chunkContext.Provider>
     )
