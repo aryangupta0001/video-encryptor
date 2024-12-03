@@ -58,7 +58,7 @@ router.post("/addvideochunks/", async (req, res) => {
             encryptedChunk = encryptedChunk.toString('hex');
 
             const VideoChunk = await videoChunk.create({
-                videoId: videoId, chunkData: chunkData
+                videoId: videoId, chunkData: encryptedChunk 
             });
 
             const videoData = await videoMetaData.findByIdAndUpdate(videoId, { $addToSet: { videoChunkIds: VideoChunk._id } }, { new: true });

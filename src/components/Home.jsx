@@ -98,8 +98,8 @@ const Home = (props) => {
 
 
 
-    const totalUploadedChunks = getTotalUploadedChunks(videoId);
-    console.log(totalChunks == totalUploadedChunks ? "All chunks uploaded ssuccessfully" : `${totalChunks - totalUploadedChunks} chunks are missing`);
+    const totalUploadedChunks = await getTotalUploadedChunks(videoId);
+    console.log(totalChunks == totalUploadedChunks ? "All chunks uploaded successfully" : `${totalChunks - totalUploadedChunks} chunks are missing`);
 
     const endTime = new Date();
     console.log(`Upload started at ${endTime.toLocaleTimeString()}`)
@@ -155,6 +155,10 @@ const Home = (props) => {
                 <div style={{ display: (uploadPercent < 100) ? "block" : "none" }}> Uploading... {uploadPercent.toFixed(2)}% </div>
 
                 <div style={{ display: (uploadPercent < 100) ? "none" : "block" }}>Upload Complete</div>
+
+                {uploadPercent == 100 &&
+                  <button className='button mb-10 cursor' onClick={saveEncryptedFile} >Download Encrypted File</button>
+                }
 
               </div>
             </>

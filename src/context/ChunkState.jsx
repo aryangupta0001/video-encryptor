@@ -127,10 +127,7 @@ const ChunkState = (props) => {
             });
 
             const uploadedChunkCount = await toalUploadedChunks.json();
-            return uploadedChunkCount;
-            // console.log(uploadedChunkCount);
-
-            // console.log(totalChunks == uploadedChunkCount.totalChunk ? "All chunks uploaded ssuccessfully" : `${totalChunks - uploadedChunkCount.totalChunk} chunks are missing`);
+            return uploadedChunkCount.totalChunk;
         }
 
         catch (error) {
@@ -138,7 +135,12 @@ const ChunkState = (props) => {
             console.log(error);
         }
     }
-    
+
+    const saveEncryptedFile = async () => {
+
+
+    }
+
 
 
 
