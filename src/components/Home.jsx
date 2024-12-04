@@ -7,11 +7,15 @@ import uploadImg from "../assets/images/cloud-computing.png"
 const Home = (props) => {
 
   const context = useContext(chunkContext);
-  const { arrayBufferToHex, insertLockKey, uploadVideo, addVideoChunks, getTotalUploadedChunks, handleLockingKey, convertKeyToHex, encryptVideo, lockKey, sendToBackend } = context;
+  const { arrayBufferToHex, insertLockKey, uploadVideo, addVideoChunks, getTotalUploadedChunks, handleLockingKey, convertKeyToHex, lockKey, saveEncryptedFile } = context;
 
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadPercent, setUploadPercent] = useState(0.0);
+  const [vId, sVId] = useState('');
+
+  let videoId = '';
+
 
 
   const CHUNK_SIZE = 0.025 * 1024 * 1024;
@@ -72,6 +76,8 @@ const Home = (props) => {
 
     // Upload Video Details :-
     const videoId = await uploadVideo(fileName, fileSize, totalChunks);
+    console.log(videoId);
+    sVId(videoId);
 
 
     while (offset < fileSize) {
@@ -157,7 +163,7 @@ const Home = (props) => {
                 <div style={{ display: (uploadPercent < 100) ? "none" : "block" }}>Upload Complete</div>
 
                 {uploadPercent == 100 &&
-                  <button className='button mb-10 cursor' onClick={saveEncryptedFile} >Download Encrypted File</button>
+                  <button className='button mb-10 cursor' onClick={() => { console.log("VID : ", vId); saveEncryptedFile(vId) }} >Download Encrypted File</button>
                 }
 
               </div>

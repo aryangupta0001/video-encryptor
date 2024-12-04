@@ -58,7 +58,7 @@ router.post("/addvideochunks/", async (req, res) => {
             encryptedChunk = encryptedChunk.toString('hex');
 
             const VideoChunk = await videoChunk.create({
-                videoId: videoId, chunkData: encryptedChunk 
+                videoId: videoId, chunkData: encryptedChunk
             });
 
             const videoData = await videoMetaData.findByIdAndUpdate(videoId, { $addToSet: { videoChunkIds: VideoChunk._id } }, { new: true });
@@ -94,5 +94,51 @@ router.get("/totaluploadedchunks", async (req, res) => {
         res.status(500).json({ message: "Some Error Occured while getting total no. of uploaded chunks", error: error.message });
     }
 });
+
+router.get("/getencryptedchunks", async (req, res) => {
+    try {
+        const { videoId } = req.query;
+        let vnm = '';
+        const numberedChunkData = {};
+
+        // const videoTitle = await videoMetaData.findOne({ _id: videoId }).title;
+        videoMetaData.findById(videoId)
+            .then(video => {
+                if (video) {
+                    vnm = video.title;
+                    console.log("vname : ", vnm);
+
+                    numberedChunkData["title"] = vnm;
+
+
+                    const projection = { chunkData: 1 };
+                    videoChunk.find({ videoId: videoId }, projection)
+                        .then(cursor => {
+                            cursor.forEach((doc) => {
+                                numberedChunkData[counter] = doc.chunkData; // Add chunkData with numbered keys
+                                counter++;
+                            });
+                            res.setHeader('Content-Disposition', `attachment; filename=${vnm}.JSON`); // File download header
+                            res.setHeader('Content-Type', 'application/json');
+                            res.send(JSON.stringify(numberedChunkData, null, 2)); // Pretty JSON formatting
+                        })
+
+                }
+                else {
+                    console.log("Video not found");
+                }
+            })
+
+        let counter = 1;
+
+
+    }
+
+    catch (error) {
+        console.log("Error inside getencrypted chunks, chunks.js", error.message)
+        res.status(500).json({ message: "Some Error Occured while downloading json file", error: error.message });
+
+    }
+})
 
 module.exports = router;

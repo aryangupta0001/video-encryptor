@@ -1,5 +1,5 @@
 import chunkContext from './chunkContext'
-import Reeact, { useState } from 'react'
+import { useState } from 'react'
 
 
 const ChunkState = (props) => {
@@ -136,16 +136,28 @@ const ChunkState = (props) => {
         }
     }
 
-    const saveEncryptedFile = async () => {
+    const saveEncryptedFile = async (videoId) => {
+        try {
+            console.log(videoId);
+            const response = await fetch(`http://localhost:3000/api/chunks/getencryptedchunks?videoId=${videoId}`);
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a'); // Create an anchor element
+            a.href = url;
+            a.download = 'video.json'; // Name of the downloaded file
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a); // Cleanup
+        }
 
+        catch (error) {
+            console.error('Error downloading file:', error);
+        }
 
     }
 
-
-
-
     return (
-        <chunkContext.Provider value={{ arrayBufferToHex, insertLockKey, uploadVideo, addVideoChunks, getTotalUploadedChunks, handleLockingKey, convertKeyToHex, lockKey }}>
+        <chunkContext.Provider value={{ arrayBufferToHex, insertLockKey, uploadVideo, addVideoChunks, getTotalUploadedChunks, handleLockingKey, convertKeyToHex, saveEncryptedFile, lockKey }}>
             {props.children}
         </chunkContext.Provider>
     )
