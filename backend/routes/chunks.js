@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { videoMetaData, videoChunk } = require("../models/videoMetaData");
 const { body, validationResult } = require("express-validator");
+const LZString = require('lz-string');  // Using require for lz-string module
 
 const crypto = require('crypto');
 
@@ -11,6 +12,19 @@ const secretKey = crypto.randomBytes(32); // 32 bytes = 256 bits
 // Function to generate a random 128-bit (16-byte) IV
 const iv = crypto.randomBytes(16); // 16 bytes = 128 bits
 
+
+
+// Function to compress chunks
+async function compressChunk(encryptedChunk) {
+    try {
+        const compressedChunk = LZString.compressToBase64(encryptedChunk); // Compress and encode to Base64
+
+        return compressedChunk;
+    }
+    catch (err) {
+        console.error("Error while compressing chunk", err);
+    }
+}
 
 
 router.post("/uploadvideo", async (req, res) => {
@@ -56,10 +70,11 @@ router.post("/addvideochunks/", async (req, res) => {
             encryptedChunk = Buffer.concat([encryptedChunk, cipher.final()]);
             encryptedChunk = encryptedChunk.toString('hex');
 
-            
+            const compressedChunk = await compressChunk(encryptedChunk);
+
 
             const VideoChunk = await videoChunk.create({
-                videoId: videoId, chunkData: encryptedChunk
+                videoId: videoId, chunkData: compressedChunk
             });
 
             const videoData = await videoMetaData.findByIdAndUpdate(videoId, { $addToSet: { videoChunkIds: VideoChunk._id } }, { new: true });
@@ -140,12 +155,5 @@ router.get("/getencryptedchunks", async (req, res) => {
 
     }
 })
-
-
-// router.get("/getvideodetails", async(req, res) => {
-//     try{
-
-//     }
-// })
 
 module.exports = router;
