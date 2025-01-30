@@ -22,7 +22,7 @@ const ChunkState = (props) => {
     const convertKeyToHex = async () => {
         return Array.from(lockKey) // Convert string to array of characters
             .map(char => char.charCodeAt(0).toString(16).padStart(2, '0')) // Convert each char to hex
-            .join(''); // Join the hex values into a single String
+            .join(''); // Join the hex valu es into a single String
     }
 
 
@@ -118,7 +118,7 @@ const ChunkState = (props) => {
 
     const getTotalUploadedChunks = async (videoId) => {
         try {
-            const toalUploadedChunks = await fetch(`http://localhost:3000/api/chunks/totaluploadedchunks?videoId=${videoId}`, {
+            const toalUploadedChunks = await fetch(`http://localhost:3000/api/chunks/uploadedvideodetail?videoId=${videoId}&reqd=chunkcount`, {
                 method: "GET",
 
                 headers: {
@@ -138,20 +138,55 @@ const ChunkState = (props) => {
 
     const saveEncryptedFile = async (videoId) => {
         try {
-            console.log(videoId);
-            const response = await fetch(`http://localhost:3000/api/chunks/getencryptedchunks?videoId=${videoId}`);
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a'); // Create an anchor element
-            a.href = url;
-            a.download = 'video.json'; // Name of the downloaded file
+            const detailResponse = await fetch(`http://localhost:3000/api/chunks/uploadedvideodetail?videoId=${videoId}&reqd=all`, {
+                method: "GET",
+
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!detailResponse.ok) {
+                throw new Error("Detail Response NOT OK");
+            }
+
+            const videoDetails = await detailResponse.json();
+            const videoDetailsBlob = new Blob([JSON.stringify(videoDetails)], { type: 'application/json' });
+
+            let videoDetailURL = window.URL.createObjectURL(videoDetailsBlob);
+            const a = document.createElement('a');
+            a.href = videoDetailURL;
+            a.download = 'video_details.json';
             document.body.appendChild(a);
-            a.click();
+
+
+
+            const chunkResponse = await fetch(`http://localhost:3000/api/chunks/getencryptedchunks?videoId=${videoId}`);
+
+            if (!chunkResponse.ok)
+                throw new Error("Chunk Response NOT OK");
+
+            const videoData = await chunkResponse.json();
+            const videoBlob = new Blob([JSON.stringify(videoData)], { type: 'application/json' });
+
+            // const blob = await response.blob();
+            let videoURL = window.URL.createObjectURL(videoBlob);
+            const b = document.createElement('a'); // Create an anchor element
+            b.href = videoURL;
+            b.download = `${videoDetails.title}.json`; // Name of the downloaded file
+            document.body.appendChild(b);
+
+
+            b.click();
             document.body.removeChild(a); // Cleanup
+            a.click();
+            document.body.removeChild(b);
+
         }
 
         catch (error) {
             console.error('Error downloading file:', error);
+            console.error('Error downloading file:', response.statusText);
         }
 
     }

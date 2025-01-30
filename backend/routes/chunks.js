@@ -18,7 +18,6 @@ router.post("/uploadvideo", async (req, res) => {
 
     if (result.isEmpty()) {
         try {
-            console.log("Hello");
             const { fileName, fileSize, totalChunks } = req.body;
 
             const VideoDetails = await videoMetaData.create({
@@ -57,6 +56,8 @@ router.post("/addvideochunks/", async (req, res) => {
             encryptedChunk = Buffer.concat([encryptedChunk, cipher.final()]);
             encryptedChunk = encryptedChunk.toString('hex');
 
+            
+
             const VideoChunk = await videoChunk.create({
                 videoId: videoId, chunkData: encryptedChunk
             });
@@ -82,13 +83,20 @@ router.post("/addvideochunks/", async (req, res) => {
     }
 })
 
-router.get("/totaluploadedchunks", async (req, res) => {
+router.get("/uploadedvideodetail", async (req, res) => {
     try {
-        const { videoId } = req.query;
+        const { videoId, reqd } = req.query;
 
         const videoData = await videoMetaData.findById(videoId);
 
-        res.status(201).json({ totalChunk: videoData.videoChunkIds.length })
+        if (reqd === "chunkcount") {
+            res.status(201).json({ totalChunk: videoData.videoChunkIds.length })
+        }
+
+        else if (reqd === "all") {
+            res.status(201).json({ title: videoData.title, size: videoData.size, totalChunks: videoData.totalChunks, secretKey: secretKey, iv: iv });
+        }
+
     }
     catch (error) {
         res.status(500).json({ message: "Some Error Occured while getting total no. of uploaded chunks", error: error.message });
@@ -98,40 +106,32 @@ router.get("/totaluploadedchunks", async (req, res) => {
 router.get("/getencryptedchunks", async (req, res) => {
     try {
         const { videoId } = req.query;
-        let vnm = '';
-        const numberedChunkData = {};
+        let numberedChunkData = {};
 
         // const videoTitle = await videoMetaData.findOne({ _id: videoId }).title;
-        videoMetaData.findById(videoId)
-            .then(video => {
-                if (video) {
-                    vnm = video.title;
-                    console.log("vname : ", vnm);
+        const videoDetail = await videoMetaData.findById(videoId);
 
-                    numberedChunkData["title"] = vnm;
+        if (videoDetail) {
+            const vName = videoDetail.title;
+            console.log("video name : ", vName);
 
+            const projection = { chunkData: 1 };
+            const vidChunks = await videoChunk.find({ videoId: videoId }, projection);
 
-                    const projection = { chunkData: 1 };
-                    videoChunk.find({ videoId: videoId }, projection)
-                        .then(cursor => {
-                            cursor.forEach((doc) => {
-                                numberedChunkData[counter] = doc.chunkData; // Add chunkData with numbered keys
-                                counter++;
-                            });
-                            res.setHeader('Content-Disposition', `attachment; filename=${vnm}.JSON`); // File download header
-                            res.setHeader('Content-Type', 'application/json');
-                            res.send(JSON.stringify(numberedChunkData, null, 2)); // Pretty JSON formatting
-                        })
+            let counter = 1;
 
-                }
-                else {
-                    console.log("Video not found");
-                }
-            })
+            vidChunks.forEach((doc) => {
+                numberedChunkData[counter] = doc.chunkData; // Add chunkData with numbered keys
+                counter++;
+            });
+            res.setHeader('Content-Disposition', `attachment; filename=${vName}.json`); // File download header
+            res.setHeader('Content-Type', 'application/json');
 
-        let counter = 1;
-
-
+            res.json(numberedChunkData);
+        }
+        else {
+            console.log("Video not found");
+        }
     }
 
     catch (error) {
@@ -140,5 +140,12 @@ router.get("/getencryptedchunks", async (req, res) => {
 
     }
 })
+
+
+// router.get("/getvideodetails", async(req, res) => {
+//     try{
+
+//     }
+// })
 
 module.exports = router;

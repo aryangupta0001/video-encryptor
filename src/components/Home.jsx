@@ -12,9 +12,7 @@ const Home = (props) => {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadPercent, setUploadPercent] = useState(0.0);
-  const [vId, sVId] = useState('');
-
-  let videoId = '';
+  const [videoId, setVideoId] = useState('');
 
 
 
@@ -76,8 +74,7 @@ const Home = (props) => {
 
     // Upload Video Details :-
     const videoId = await uploadVideo(fileName, fileSize, totalChunks);
-    console.log(videoId);
-    sVId(videoId);
+    setVideoId(videoId);
 
 
     while (offset < fileSize) {
@@ -163,7 +160,7 @@ const Home = (props) => {
                 <div style={{ display: (uploadPercent < 100) ? "none" : "block" }}>Upload Complete</div>
 
                 {uploadPercent == 100 &&
-                  <button className='button mb-10 cursor' onClick={() => { console.log("VID : ", vId); saveEncryptedFile(vId) }} >Download Encrypted File</button>
+                  <button className='button mb-10 cursor' onClick={() => { console.log("VID : ", videoId); saveEncryptedFile(videoId) }} >Download Encrypted File</button>
                 }
 
               </div>
