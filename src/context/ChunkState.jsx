@@ -150,8 +150,12 @@ const ChunkState = (props) => {
                 throw new Error("Detail Response NOT OK");
             }
 
-            const videoDetails = await detailResponse.json();
+            let videoDetails = await detailResponse.json();
+
+            videoDetails.lockKey = lockKey;
+
             const videoDetailsBlob = new Blob([JSON.stringify(videoDetails)], { type: 'application/json' });
+
 
             let videoDetailURL = window.URL.createObjectURL(videoDetailsBlob);
             const a = document.createElement('a');
@@ -191,8 +195,18 @@ const ChunkState = (props) => {
 
     }
 
+
+
+
+    const decryptChunks = async (videoDetails, videoData) => {
+        const chunks = videoDetails.totalChunks;
+        const chunkCount = Object.keys(videoData).length;
+
+        console.log(chunks, chunkCount);
+    }
+
     return (
-        <chunkContext.Provider value={{ arrayBufferToHex, insertLockKey, uploadVideo, addVideoChunks, getTotalUploadedChunks, handleLockingKey, convertKeyToHex, saveEncryptedFile, lockKey }}>
+        <chunkContext.Provider value={{ arrayBufferToHex, insertLockKey, uploadVideo, addVideoChunks, getTotalUploadedChunks, handleLockingKey, convertKeyToHex, saveEncryptedFile, decryptChunks, lockKey }}>
             {props.children}
         </chunkContext.Provider>
     )

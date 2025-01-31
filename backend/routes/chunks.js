@@ -122,8 +122,7 @@ router.get("/getencryptedchunks", async (req, res) => {
     try {
         const { videoId } = req.query;
         let numberedChunkData = {};
-
-        // const videoTitle = await videoMetaData.findOne({ _id: videoId }).title;
+    
         const videoDetail = await videoMetaData.findById(videoId);
 
         if (videoDetail) {

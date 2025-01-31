@@ -1,5 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap');
 
+
+html,
+body {
+    height: 100%;
+    overflow: hidden;
+}
+
 body {
     margin: 0;
     background-color: rgb(0, 0, 0);
@@ -14,11 +21,13 @@ body {
     background-size: contain;
     background-repeat: no-repeat;
 
+    overflow-y: scroll;
+
 }
 
 .body::before {
     content: " ";
-    position: absolute;
+    position: fixed;
     max-width: 100%;
     margin: 0px auto;
     width: 100%;
@@ -44,12 +53,12 @@ body {
     font-style: normal;
 }
 
-#dragDrop {
+
+.enc-dec-box {
     box-sizing: border-box;
     width: 40%;
     height: 40%;
     min-height: fit-content;
-    /* max-height: fit-content; */
 
     margin: auto;
     border: 2px solid snow;
@@ -110,7 +119,7 @@ body {
 #lockKeyInput {
     box-sizing: border-box;
     display: inline-block;
-    
+
     min-height: 30px;
     width: 70%;
 
@@ -119,20 +128,20 @@ body {
 
     border: 0;
     border-radius: 15px;
-    
+
     font-family: "Open Sans", sans-serif;
     font-optical-sizing: auto;
     font-weight: 500;
     font-style: normal;
     font-size: 20px;
-    
+
     color: rgb(0, 0, 0);
     text-align: center;
     outline: 0;
 
 }
 
-#lockKeyInput::placeholder{
+#lockKeyInput::placeholder {
     font-size: 15px;
 }
 
@@ -155,11 +164,11 @@ body {
     animation-duration: 0.05ms;
 }
 
-/* #lockKeyInput button:active {
-    background-color: rgb(255, 0, 0);
-    color: rgb(143, 142, 142);
-    animation-duration: 0.15ms;
-} */
+
+.json-file-input {
+    display: none;
+
+}
 
 .cursor:hover {
     cursor: pointer;
@@ -179,4 +188,44 @@ body {
 
 .w-70 {
     width: 70%;
+}
+
+.box-sizing{
+    box-sizing: border-box;
+}
+
+.overflow-hidden{
+    overflow: auto;
+}
+
+.clear-both{
+    clear: both;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Hide the body scrollbar */
+
+.body {
+    -ms-overflow-style: none;
+    /* Hide scrollbar in Internet Explorer and Edge */
+    scrollbar-width: none;
+    /* Hide scrollbar in Firefox */
+}
+
+.body::-webkit-scrollbar {
+    display: none;
+    /* Hide scrollbar in Chrome, Safari, and Opera */
 }
