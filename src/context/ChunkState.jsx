@@ -1,5 +1,7 @@
 import chunkContext from './chunkContext'
 import { useState } from 'react'
+import LZString from 'lz-string';
+
 
 
 const ChunkState = (props) => {
@@ -88,9 +90,24 @@ const ChunkState = (props) => {
     }
 
 
+    // Function to compress chunks
+    async function compressChunk(encryptedChunk) {
+        try {
+            const compressedChunk = LZString.compressToBase64(encryptedChunk); // Compress and encode to Base64
+            return compressedChunk;
+        }
+        catch (err) {
+            console.error("Error while compressing chunk", err);
+        }
+    }
+
+
     // Upload Video Chuunks :-
 
     const addVideoChunks = async (videoId, saltedHexChunk) => {
+
+        const compressedChunk = await compressChunk(saltedHexChunk);
+
         try {
             const addedVideoChunk = await fetch(`http://localhost:3000/api/chunks/addvideochunks`, {
                 method: "POST",
@@ -100,7 +117,7 @@ const ChunkState = (props) => {
                 },
 
 
-                body: JSON.stringify({ videoId: videoId, chunkData: saltedHexChunk })
+                body: JSON.stringify({ videoId: videoId, chunkData: compressedChunk })
             });
 
             const chunkData = await addedVideoChunk.json();
@@ -196,17 +213,75 @@ const ChunkState = (props) => {
     }
 
 
+    const deleteBackendData = async (videoId) => {
+        try {
+            const deleteData = await fetch(`http://localhost:3000/api/chunks/deleteData?videoId=${videoId}`, {
+                method: "DELETE",
+
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+
+            const deleteResponse = await deleteData.json();
+            console.log(deleteResponse);
+
+        }
+        catch (error) {
+            console.log(error);
+        }
+    }
+
+
 
 
     const decryptChunks = async (videoDetails, videoData) => {
+        const chunkKeys = Object.keys(videoData);
         const chunks = videoDetails.totalChunks;
-        const chunkCount = Object.keys(videoData).length;
 
-        console.log(chunks, chunkCount);
+
+        if (chunkKeys.length != chunks) {
+            throw new Error("Video files are tampered");
+        }
+
+        else {
+            const response = await fetch(`http://localhost:3000/api/chunks/postdecryptionkeys`, {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+
+                body: JSON.stringify({ secretKey: videoDetails.secretKey, iv: videoDetails.iv })
+            });
+
+            const resJson = await response.json();
+
+            if (resJson.decryptKeysSet === "Success") {
+                for (const chunkNum of chunkKeys) {
+                    const response = await fetch(`http://localhost:3000/api/chunks/decryptvideochunks`, {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+
+
+                        body: JSON.stringify({ chunkData: videoData[chunkNum] })
+                    });
+
+                }
+
+            }
+        }
+
+
     }
 
     return (
-        <chunkContext.Provider value={{ arrayBufferToHex, insertLockKey, uploadVideo, addVideoChunks, getTotalUploadedChunks, handleLockingKey, convertKeyToHex, saveEncryptedFile, decryptChunks, lockKey }}>
+        <chunkContext.Provider value={{ arrayBufferToHex, insertLockKey, uploadVideo, addVideoChunks, getTotalUploadedChunks, handleLockingKey, convertKeyToHex, saveEncryptedFile, decryptChunks, deleteBackendData, lockKey }}>
             {props.children}
         </chunkContext.Provider>
     )

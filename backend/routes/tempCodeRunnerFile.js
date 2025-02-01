@@ -240,10 +240,9 @@ router.post("/decryptvideochunks", async (req, res) => {
         const { chunkData } = req.body;
 
         // decompress to convert the data to the encrypted format :-
+
         const chunk = await decompressChunk(chunkData);
 
-
-        // ecryption process :-
         const encryptedBuffer = Buffer.from(chunk, 'hex');
 
         const decipher = crypto.createDecipheriv('aes-256-cbc', decryptSecretKey, decryptIV);
@@ -257,7 +256,9 @@ router.post("/decryptvideochunks", async (req, res) => {
         const base64DecodedData = decryptedChunk.toString('utf-8');  // Assuming the decrypted data is a Base64 string
         const decompressedData = LZString.decompressFromBase64(base64DecodedData);
 
-        // Check for Locking key
+
+
+        // const decrypted
     }
 })
 

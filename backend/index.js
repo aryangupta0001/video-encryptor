@@ -12,7 +12,7 @@ const app = express();
 
 app.use(cors({
   origin: 'http://localhost:5173',  // Allow requests from frontend on port 3001
-  methods: ['GET', 'POST', 'OPTIONS'],  // Allow only specific HTTP methods
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],  // Allow only specific HTTP methods
   allowedHeaders: ['Content-Type', 'Authorization']  // Allow specific headers
 }));
 

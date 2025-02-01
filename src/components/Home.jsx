@@ -7,7 +7,7 @@ import uploadImg from "../assets/images/cloud-computing.png"
 const Home = (props) => {
 
   const context = useContext(chunkContext);
-  const { arrayBufferToHex, insertLockKey, uploadVideo, addVideoChunks, getTotalUploadedChunks, handleLockingKey, convertKeyToHex, lockKey, saveEncryptedFile, decryptChunks } = context;
+  const { arrayBufferToHex, insertLockKey, uploadVideo, addVideoChunks, getTotalUploadedChunks, handleLockingKey, convertKeyToHex, lockKey, saveEncryptedFile, deleteBackendData, decryptChunks } = context;
 
 
   // Encryption Phase States
@@ -79,6 +79,7 @@ const Home = (props) => {
 
     // Upload Video Details :-
     const videoId = await uploadVideo(fileName, fileSize, totalChunks);
+    console.log(videoId);
     setVideoId(videoId);
 
 
@@ -114,7 +115,8 @@ const Home = (props) => {
 
   const handleEncryptedFileDownload = async () => {
     await saveEncryptedFile(videoId);
-    handleFileReset();
+    await deleteBackendData(videoId);
+    await handleFileReset();
   }
 
   const handleFileReset = async () => {
@@ -191,7 +193,13 @@ const Home = (props) => {
       console.log("Error reading Video Data JSON File", error);
     }
 
-    await decryptChunks(detailJSON, dataJSON);
+    try {
+      await decryptChunks(detailJSON, dataJSON);
+    }
+
+    catch (error) {
+      alert(error.message);
+    }
 
   }
 
