@@ -20,9 +20,6 @@ const Home = (props) => {
   // Decryption Phase States
   const [vidDetail, setVidDetail] = useState(null);
   const [vidData, setVidData] = useState(null);
-  const [decrypting, setDecrypting] = useState(false);
-  const [vidDataJSON, setVidDataJSON] = useState(null);
-  const [vidDetailJSON, setVidDetailJSON] = useState(null);
 
   const CHUNK_SIZE = 0.025 * 1024 * 1024;
   const INSERTION_OFFSET = 1000;
@@ -89,7 +86,6 @@ const Home = (props) => {
       const arrayBuffer = await chunk.arrayBuffer();
       const hexChunk = arrayBufferToHex(arrayBuffer);
       const saltedHexChunk = await insertLockKey(hexChunk, lockIdHex, INSERTION_OFFSET);
-
 
       // Upload Video Chunks :-
       await addVideoChunks(videoId, saltedHexChunk);
@@ -170,14 +166,13 @@ const Home = (props) => {
   }
 
   const handleDecrypt = async () => {
-    setDecrypting(true);
 
     let detailJSON = '';
     let dataJSON = '';
 
     try {
       detailJSON = await readJSON(vidDetail);
-      setVidDetailJSON(detailJSON);
+      detailJSON.fileName = vidData.name;
     }
 
     catch (error) {
@@ -186,7 +181,6 @@ const Home = (props) => {
 
     try {
       dataJSON = await readJSON(vidData);
-      setVidDataJSON(dataJSON);
     }
 
     catch (error) {

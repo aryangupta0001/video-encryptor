@@ -7,6 +7,9 @@ const LZString = require('lz-string');  // Using require for lz-string module
 const crypto = require('crypto');
 const { default: mongoose } = require("mongoose");
 
+const OFFSET = 1000;
+
+
 // Function to generate a random 256-bit (32-byte) secret key
 const secretKey = crypto.randomBytes(32); // 32 bytes = 256 bits
 
@@ -15,6 +18,8 @@ const iv = crypto.randomBytes(16); // 16 bytes = 128 bits
 
 let decryptIV = '';
 let decryptSecretKey = '';
+let decryptLockKey = '';
+
 
 
 
@@ -89,11 +94,13 @@ router.post("/addvideochunks/", async (req, res) => {
             encryptedChunk = Buffer.concat([encryptedChunk, cipher.final()]);
             encryptedChunk = encryptedChunk.toString('hex');
 
-            const compressedChunk = await compressChunk(encryptedChunk);
+
+            // const compressedChunk = await compressChunk(encryptedChunk);
 
 
             const VideoChunk = await videoChunk.create({
-                videoId: videoId, chunkData: compressedChunk
+                // videoId: videoId, chunkData: compressedChunk
+                videoId: videoId, chunkData: encryptedChunk
             });
 
             const videoData = await videoMetaData.findByIdAndUpdate(videoId, { $addToSet: { videoChunkIds: VideoChunk._id } }, { new: true });
@@ -220,10 +227,17 @@ router.delete("/deleteData", async (req, res) => {
 
 router.post("/postdecryptionkeys", async (req, res) => {
     try {
-        const { secretKey, iv } = req.body;
+        const { secretKey, iv, lockKey } = req.body;
 
-        decryptIV = Buffer.from(secretKey.data);
-        decryptSecretKey = Buffer.from(iv.data);
+        decryptSecretKey = Buffer.from(secretKey.data);
+        decryptIV = Buffer.from(iv.data);
+        decryptLockKey = lockKey;
+
+        // console.log("IV : ", decryptIV, decryptIV.length);
+        // console.log("Secret Key : ", decryptSecretKey, decryptIV.length);
+        // console.log("IV : ", decryptIV, decryptIV.length);
+
+
 
         res.json({ "decryptKeysSet": "Success" });
 
@@ -240,11 +254,13 @@ router.post("/decryptvideochunks", async (req, res) => {
         const { chunkData } = req.body;
 
         // decompress to convert the data to the encrypted format :-
-        const chunk = await decompressChunk(chunkData);
+        // const encryptedChunk = await decompressChunk(chunkData);
 
 
-        // ecryption process :-
-        const encryptedBuffer = Buffer.from(chunk, 'hex');
+
+
+        // decryption process :-
+        const encryptedBuffer = Buffer.from(chunkData, 'hex');
 
         const decipher = crypto.createDecipheriv('aes-256-cbc', decryptSecretKey, decryptIV);
 
@@ -254,10 +270,42 @@ router.post("/decryptvideochunks", async (req, res) => {
 
 
         // decompress again to convert the decrypted data to the salted hexadecimal format :-
-        const base64DecodedData = decryptedChunk.toString('utf-8');  // Assuming the decrypted data is a Base64 string
-        const decompressedData = LZString.decompressFromBase64(base64DecodedData);
+        const base64DecodedData = decryptedChunk.toString('hex');  // Assuming the decrypted data is a Base64 string
+        // const chunk = await LZString.decompressFromBase64(base64DecodedData);
+        const chunk = base64DecodedData;
 
         // Check for Locking key
+
+        let pos = 0;
+        const lockLength = decryptLockKey.length;
+        let a = []
+
+        while (true) {
+
+            const end = pos + lockLength + OFFSET <= chunk.length ? pos + lockLength + OFFSET : chunk.length;
+            const last = end < chunk.length ? 0 : 1;
+
+            if (chunk.slice(pos, pos + lockLength) == decryptLockKey) {
+                a.push(chunk.slice(pos + lockLength, end));
+                pos = end;
+            }
+
+            else {
+                console.log(chunk.slice(pos, pos + lockLength), decryptLockKey);
+
+                res.json({ "result": "Lock Key Verification Failed" });
+                return;
+            }
+
+            if (last) {
+                break;
+            }
+
+        }
+        
+        const checkedChunk = a.join();
+
+        res.json({ "result": "Success", "chunk": checkedChunk });
     }
 })
 

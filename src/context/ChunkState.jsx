@@ -39,9 +39,24 @@ const ChunkState = (props) => {
     };
 
 
+    // Hexadecimal to Array Buffer conversion :-
+
+    const hexToArrayBuffer = (hexString) => {
+        const byteArray = new Uint8Array(hexString.length / 2);
+
+        for (let i = 0; i < hexString.length; i += 2) {
+            byteArray[i / 2] = parseInt(hexString.substr(i, 2), 16);
+        }
+
+        return byteArray.buffer;
+    };
+
+
+
     // Salting Hex Chunk :-
 
     const insertLockKey = async (hexChunk, lockKey, INSERTION_OFFSET) => {
+
         let a = [];
         let pos = 0;
 
@@ -53,6 +68,7 @@ const ChunkState = (props) => {
 
             else {
                 a.push(lockKey.concat(hexChunk.slice(pos, hexChunk.length)));
+                setLockKey(lockKey);
                 break;
             }
         }
@@ -117,7 +133,7 @@ const ChunkState = (props) => {
                 },
 
 
-                body: JSON.stringify({ videoId: videoId, chunkData: compressedChunk })
+                body: JSON.stringify({ videoId: videoId, chunkData: saltedHexChunk })
             });
 
             const chunkData = await addedVideoChunk.json();
@@ -237,11 +253,15 @@ const ChunkState = (props) => {
 
 
     const decryptChunks = async (videoDetails, videoData) => {
-        const chunkKeys = Object.keys(videoData);
         const chunks = videoDetails.totalChunks;
+        const chunkKeys = Object.keys(videoData);
+
+        let videoHex = []
 
 
         if (chunkKeys.length != chunks) {
+            console.log(chunkKeys.length, chunks);
+
             throw new Error("Video files are tampered");
         }
 
@@ -254,10 +274,11 @@ const ChunkState = (props) => {
                 },
 
 
-                body: JSON.stringify({ secretKey: videoDetails.secretKey, iv: videoDetails.iv })
+                body: JSON.stringify({ secretKey: videoDetails.secretKey, iv: videoDetails.iv, lockKey: videoDetails.lockKey })
             });
 
             const resJson = await response.json();
+
 
             if (resJson.decryptKeysSet === "Success") {
                 for (const chunkNum of chunkKeys) {
@@ -272,7 +293,53 @@ const ChunkState = (props) => {
                         body: JSON.stringify({ chunkData: videoData[chunkNum] })
                     });
 
+                    const decryptResponse = await response.json();
+
+                    if (decryptResponse.result == "Success") {
+                        videoHex.push(decryptResponse.chunk);
+                    }
+
+                    else {
+                        console.error("Lock Key verification Failed", decryptResponse.result, videoDetails.lockKey);
+                        return;
+                    }
                 }
+
+                let fileBuffer = [];
+
+                for (const chunk of videoHex) {
+                    const arrayBuffer = hexToArrayBuffer(chunk);
+                    fileBuffer.push(new Uint8Array(arrayBuffer));
+                }
+
+                // Combine all ArrayBuffers into one
+                const combinedBuffer = new Uint8Array(fileBuffer.reduce((acc, curr) => acc.concat(Array.from(curr)), []));
+
+                let fileName = videoDetails.fileName;
+                const fileNameSplit = fileName.split(".");
+
+                fileName = fileNameSplit[0] + "." + fileNameSplit[1];
+
+                const fileType = fileNameSplit[1];
+                console.log(fileType);
+
+
+                // Save the combined ArrayBuffer as a video file
+                const blob = new Blob([combinedBuffer], { type: `video/${fileType}` });  // Assuming it's an MP4 file, adjust as needed
+                const file = new File([blob], fileName);
+
+
+
+                // You can now download or process the reconstructed file as needed
+                // For example, to trigger a download in the browser:
+
+                const url = URL.createObjectURL(file);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                a.click();
+                URL.revokeObjectURL(url);
+
 
             }
         }
