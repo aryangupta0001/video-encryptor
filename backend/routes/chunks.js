@@ -115,7 +115,7 @@ router.post("/addvideochunks/", async (req, res) => {
 
         catch (error) {
             console.log("Alert inside add video chunks", error)
-            res.status(500).json({ message: "Some Error Occured while adDing video chunks", error: error.message });
+            res.status(500).json({ message: "Some Error Occured while adding video chunks", error: error.message });
         }
     }
 
@@ -250,6 +250,9 @@ router.post("/postdecryptionkeys", async (req, res) => {
 router.post("/decryptvideochunks", async (req, res) => {
     const result = validationResult(req);
 
+    // const dkey = '415259414e';
+
+
     if (result.isEmpty()) {
         const { chunkData } = req.body;
 
@@ -274,10 +277,14 @@ router.post("/decryptvideochunks", async (req, res) => {
         // const chunk = await LZString.decompressFromBase64(base64DecodedData);
         const chunk = base64DecodedData;
 
+        // /*
+        // const chunk = chunkData;
+
         // Check for Locking key
 
         let pos = 0;
         const lockLength = decryptLockKey.length;
+        // const lockLength = dkey.length;
         let a = []
 
         while (true) {
@@ -286,12 +293,14 @@ router.post("/decryptvideochunks", async (req, res) => {
             const last = end < chunk.length ? 0 : 1;
 
             if (chunk.slice(pos, pos + lockLength) == decryptLockKey) {
+            // if (chunk.slice(pos, pos + lockLength) == dkey) {
                 a.push(chunk.slice(pos + lockLength, end));
                 pos = end;
             }
 
             else {
                 console.log(chunk.slice(pos, pos + lockLength), decryptLockKey);
+                // console.log(chunk.slice(pos, pos + lockLength), dkey);
 
                 res.json({ "result": "Lock Key Verification Failed" });
                 return;
@@ -302,10 +311,12 @@ router.post("/decryptvideochunks", async (req, res) => {
             }
 
         }
-        
-        const checkedChunk = a.join();
+
+        const checkedChunk = a.join('');
+        // */
 
         res.json({ "result": "Success", "chunk": checkedChunk });
+        // res.json({ "result": "Success", "chunk": chunkData });
     }
 })
 

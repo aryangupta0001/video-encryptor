@@ -41,7 +41,23 @@ const ChunkState = (props) => {
 
     // Hexadecimal to Array Buffer conversion :-
 
+    // const hexToArrayBuffer = (hexString) => {
+    //     const byteArray = new Uint8Array(hexString.length / 2);
+
+    //     for (let i = 0; i < hexString.length; i += 2) {
+    //         byteArray[i / 2] = parseInt(hexString.substr(i, 2), 16);
+    //     }
+
+    //     return byteArray.buffer;
+    // };
+
+
     const hexToArrayBuffer = (hexString) => {
+        if (hexString.length % 2 !== 0) {
+            hexString = '0' + hexString;
+            // throw new Error('Hex string must have an even length');
+        }
+
         const byteArray = new Uint8Array(hexString.length / 2);
 
         for (let i = 0; i < hexString.length; i += 2) {
@@ -122,7 +138,7 @@ const ChunkState = (props) => {
 
     const addVideoChunks = async (videoId, saltedHexChunk) => {
 
-        const compressedChunk = await compressChunk(saltedHexChunk);
+        // const compressedChunk = await compressChunk(saltedHexChunk);
 
         try {
             const addedVideoChunk = await fetch(`http://localhost:3000/api/chunks/addvideochunks`, {
@@ -250,9 +266,8 @@ const ChunkState = (props) => {
     }
 
 
-
-
     const decryptChunks = async (videoDetails, videoData) => {
+        // const decryptChunks = async (videoData) => {
         const chunks = videoDetails.totalChunks;
         const chunkKeys = Object.keys(videoData);
 
@@ -301,9 +316,41 @@ const ChunkState = (props) => {
 
                     else {
                         console.error("Lock Key verification Failed", decryptResponse.result, videoDetails.lockKey);
+                        // console.error("Lock Key verification Failed", decryptResponse.result);
                         return;
                     }
                 }
+
+
+                /*
+
+                let hexjs = {};
+                let count = 1;
+
+
+                for (let i of videoHex) {
+                    hexjs[count] = i;
+                    count++;
+                }
+
+
+
+                const videoBlob = new Blob([JSON.stringify(hexjs)], { type: 'application/json' });
+
+                // const blob = await response.blob();
+                let videoURL = window.URL.createObjectURL(videoBlob);
+                const b = document.createElement('a'); // Create an anchor element
+                b.href = videoURL;
+                b.download = `hexjs.json`; // Name of the downloaded file
+                document.body.appendChild(b);
+
+
+                b.click();
+                document.body.removeChild(b); // Cleanup
+                */
+
+
+                // /*
 
                 let fileBuffer = [];
 
@@ -316,6 +363,7 @@ const ChunkState = (props) => {
                 const combinedBuffer = new Uint8Array(fileBuffer.reduce((acc, curr) => acc.concat(Array.from(curr)), []));
 
                 let fileName = videoDetails.fileName;
+                // let fileName = 'video.mp4';
                 const fileNameSplit = fileName.split(".");
 
                 fileName = fileNameSplit[0] + "." + fileNameSplit[1];
@@ -339,6 +387,8 @@ const ChunkState = (props) => {
                 a.download = fileName;
                 a.click();
                 URL.revokeObjectURL(url);
+
+                // */
 
 
             }
