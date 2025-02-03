@@ -63,8 +63,6 @@ const Home = (props) => {
     const fileName = file.name;
     let totalChunks = Math.ceil(fileSize / CHUNK_SIZE);
 
-    // let hex = [];
-
 
     // Convert Lock Key into Hexadecimal Format :-
     const lockIdHex = await convertKeyToHex();
@@ -91,9 +89,6 @@ const Home = (props) => {
       const hexChunk = arrayBufferToHex(arrayBuffer);
       const saltedHexChunk = await insertLockKey(hexChunk, lockIdHex, INSERTION_OFFSET);
 
-      // hex.push(saltedHexChunk);
-      // hex.push(hexChunk);
-
       // Upload Video Chunks :-
       await addVideoChunks(videoId, saltedHexChunk);
 
@@ -113,35 +108,6 @@ const Home = (props) => {
     const endTime = new Date();
     console.log(`Upload started at ${endTime.toLocaleTimeString()}`)
     console.log(`Time Taken : ${(endTime - startTime) / 1000}`);
-
-
-
-    /*
-    let hexjs = {};
-    let count = 1;
-
-
-    for (let i of hex) {
-      hexjs[count] = i;
-      count++;
-    }
-
-
-
-    const videoBlob = new Blob([JSON.stringify(hexjs)], { type: 'application/json' });
-
-    // const blob = await response.blob();
-    let videoURL = window.URL.createObjectURL(videoBlob);
-    const b = document.createElement('a'); // Create an anchor element
-    b.href = videoURL;
-    b.download = `hexjs.json`; // Name of the downloaded file
-    document.body.appendChild(b);
-
-
-    b.click();
-    document.body.removeChild(b); // Cleanup
-    */
-
 
   }
 
@@ -225,7 +191,6 @@ const Home = (props) => {
 
     try {
       await decryptChunks(detailJSON, dataJSON);
-      // await decryptChunks(dataJSON);
     }
 
     catch (error) {
@@ -345,8 +310,7 @@ const Home = (props) => {
           </div>
 
           {
-            // vidData && vidDetail &&
-            vidData &&
+            vidData && vidDetail &&
             <>
               <button className='button mb-10 cursor' onClick={handleDecrypt} >Upload</button>
             </>

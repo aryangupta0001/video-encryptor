@@ -95,12 +95,12 @@ router.post("/addvideochunks/", async (req, res) => {
             encryptedChunk = encryptedChunk.toString('hex');
 
 
-            // const compressedChunk = await compressChunk(encryptedChunk);
+            const compressedChunk = await compressChunk(encryptedChunk);
 
 
             const VideoChunk = await videoChunk.create({
-                // videoId: videoId, chunkData: compressedChunk
-                videoId: videoId, chunkData: encryptedChunk
+                videoId: videoId, chunkData: compressedChunk
+                // videoId: videoId, chunkData: encryptedChunk
             });
 
             const videoData = await videoMetaData.findByIdAndUpdate(videoId, { $addToSet: { videoChunkIds: VideoChunk._id } }, { new: true });
@@ -250,20 +250,18 @@ router.post("/postdecryptionkeys", async (req, res) => {
 router.post("/decryptvideochunks", async (req, res) => {
     const result = validationResult(req);
 
-    // const dkey = '415259414e';
-
 
     if (result.isEmpty()) {
         const { chunkData } = req.body;
 
         // decompress to convert the data to the encrypted format :-
-        // const encryptedChunk = await decompressChunk(chunkData);
+        const encryptedChunk = await decompressChunk(chunkData);
 
 
 
 
         // decryption process :-
-        const encryptedBuffer = Buffer.from(chunkData, 'hex');
+        const encryptedBuffer = Buffer.from(encryptedChunk, 'hex');
 
         const decipher = crypto.createDecipheriv('aes-256-cbc', decryptSecretKey, decryptIV);
 
@@ -271,53 +269,68 @@ router.post("/decryptvideochunks", async (req, res) => {
         decryptedChunk = Buffer.concat([decryptedChunk, decipher.final()]);
 
 
+        if (decryptedChunk) {
 
-        // decompress again to convert the decrypted data to the salted hexadecimal format :-
-        const base64DecodedData = decryptedChunk.toString('hex');  // Assuming the decrypted data is a Base64 string
-        // const chunk = await LZString.decompressFromBase64(base64DecodedData);
-        const chunk = base64DecodedData;
+            console.log(decryptedChunk);
 
-        // /*
-        // const chunk = chunkData;
+            // Convert decrypted buffer to Hex :-
+            const base64DecodedData = decryptedChunk.toString('hex');  // Assuming the decrypted data is a Base64 string
 
-        // Check for Locking key
+            if (base64DecodedData) {
 
-        let pos = 0;
-        const lockLength = decryptLockKey.length;
-        // const lockLength = dkey.length;
-        let a = []
+                // decompress again to convert the decrypted data to the salted hexadecimal format :-
+                // const chunk = LZString.decompressFromBase64(base64DecodedData);
 
-        while (true) {
+                const chunk = base64DecodedData;
 
-            const end = pos + lockLength + OFFSET <= chunk.length ? pos + lockLength + OFFSET : chunk.length;
-            const last = end < chunk.length ? 0 : 1;
 
-            if (chunk.slice(pos, pos + lockLength) == decryptLockKey) {
-            // if (chunk.slice(pos, pos + lockLength) == dkey) {
-                a.push(chunk.slice(pos + lockLength, end));
-                pos = end;
+                if (chunk) {
+                    let pos = 0;
+                    const lockLength = decryptLockKey.length;
+                    let a = []
+
+                    while (true) {
+
+                        const end = pos + lockLength + OFFSET <= chunk.length ? pos + lockLength + OFFSET : chunk.length;
+                        const last = end < chunk.length ? 0 : 1;
+
+                        if (chunk.slice(pos, pos + lockLength) == decryptLockKey) {
+                            a.push(chunk.slice(pos + lockLength, end));
+                            pos = end;
+                        }
+
+                        else {
+                            console.log(chunk.slice(pos, pos + lockLength), decryptLockKey);
+
+                            res.json({ "result": "Lock Key Verification Failed" });
+                            return;
+                        }
+
+                        if (last) {
+                            break;
+                        }
+
+                    }
+
+                    const checkedChunk = a.join('');
+                    // */
+
+                    res.json({ "result": "Success", "chunk": checkedChunk });
+                }
+                else {
+                    res.json({ "result": "Something went wrong 1", "chunk": "checkedChunk" })
+                }
             }
-
             else {
-                console.log(chunk.slice(pos, pos + lockLength), decryptLockKey);
-                // console.log(chunk.slice(pos, pos + lockLength), dkey);
-
-                res.json({ "result": "Lock Key Verification Failed" });
-                return;
+                res.json({ "result": "Something went wrong 2", "chunk": "checkedChunk" })
             }
-
-            if (last) {
-                break;
-            }
-
         }
-
-        const checkedChunk = a.join('');
-        // */
-
-        res.json({ "result": "Success", "chunk": checkedChunk });
-        // res.json({ "result": "Success", "chunk": chunkData });
+        else {
+            res.json({ "result": "Something went wrong 3", "chunk": "checkedChunk" })
+        }
     }
+
+
 })
 
 
