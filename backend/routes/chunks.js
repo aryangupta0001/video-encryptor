@@ -94,7 +94,8 @@ router.post("/addvideochunks/", async (req, res) => {
             encryptedChunk = Buffer.concat([encryptedChunk, cipher.final()]);
             encryptedChunk = encryptedChunk.toString('hex');
 
-
+            console.log("Encrypted chunk : ", encryptedChunk);
+            
             const compressedChunk = await compressChunk(encryptedChunk);
 
 
@@ -109,7 +110,8 @@ router.post("/addvideochunks/", async (req, res) => {
             res.status(201).json({
                 message: "Chunk Created",
                 id: VideoChunk._id,
-                videoId: videoData._id
+                videoId: videoData._id,
+                videoChunk: VideoChunk.chunkData
             })
         }
 
@@ -233,12 +235,6 @@ router.post("/postdecryptionkeys", async (req, res) => {
         decryptIV = Buffer.from(iv.data);
         decryptLockKey = lockKey;
 
-        // console.log("IV : ", decryptIV, decryptIV.length);
-        // console.log("Secret Key : ", decryptSecretKey, decryptIV.length);
-        // console.log("IV : ", decryptIV, decryptIV.length);
-
-
-
         res.json({ "decryptKeysSet": "Success" });
 
     }
@@ -279,9 +275,9 @@ router.post("/decryptvideochunks", async (req, res) => {
             if (base64DecodedData) {
 
                 // decompress again to convert the decrypted data to the salted hexadecimal format :-
-                // const chunk = LZString.decompressFromBase64(base64DecodedData);
+                const chunk = LZString.decompressFromBase64(base64DecodedData);
 
-                const chunk = base64DecodedData;
+                // const chunk = base64DecodedData;
 
 
                 if (chunk) {

@@ -129,6 +129,8 @@ const ChunkState = (props) => {
 
         const compressedChunk = await compressChunk(saltedHexChunk);
 
+        console.log("Compressed chunk : ", compressedChunk);
+
         try {
             const addedVideoChunk = await fetch(`http://localhost:3000/api/chunks/addvideochunks`, {
                 method: "POST",
@@ -138,13 +140,13 @@ const ChunkState = (props) => {
                 },
 
 
-                body: JSON.stringify({ videoId: videoId, chunkData: saltedHexChunk })
+                body: JSON.stringify({ videoId: videoId, chunkData: compressedChunk })
             });
 
             const chunkData = await addedVideoChunk.json();
 
 
-            console.log("Video Chunk : \t", chunkData.id);
+            console.log("Encrypted chunk : \t", chunkData.videoChunk);
 
         }
 
