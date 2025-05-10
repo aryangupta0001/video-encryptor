@@ -127,9 +127,9 @@ const ChunkState = (props) => {
 
     const addVideoChunks = async (videoId, saltedHexChunk) => {
 
-        const compressedChunk = await compressChunk(saltedHexChunk);
+        // const compressedChunk = await compressChunk(saltedHexChunk);
 
-        console.log("Compressed chunk : ", compressedChunk);
+        // console.log("Compressed chunk : ", compressedChunk);
 
         try {
             const addedVideoChunk = await fetch(`http://localhost:3000/api/chunks/addvideochunks`, {
@@ -140,13 +140,13 @@ const ChunkState = (props) => {
                 },
 
 
-                body: JSON.stringify({ videoId: videoId, chunkData: compressedChunk })
+                body: JSON.stringify({ videoId: videoId, chunkData: saltedHexChunk })
             });
 
             const chunkData = await addedVideoChunk.json();
 
 
-            console.log("Encrypted chunk : \t", chunkData.videoChunk);
+            // console.log("Encrypted chunk : \t", chunkData.videoChunk);
 
         }
 
